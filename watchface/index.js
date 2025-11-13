@@ -279,6 +279,7 @@ WatchFace({
     })
   },
 
+
   onDestroy() {
     if (seconds_timer.timer) {
       timer.stopTimer(seconds_timerw)
