@@ -1,19 +1,29 @@
 import hmUI from '@zos/ui'
 import { Time } from '@zos/sensor'
-import  { Weather } from '@zos/sensor'
+import { Weather } from '@zos/sensor'
+import { HeartRate } from '@zos/sensor'
+import { Calorie } from '@zos/sensor'
+import { Step } from '@zos/sensor'
+import { Distance } from '@zos/sensor'
+import { Battery } from '@zos/sensor'
 import timer from '@zos/timer'
 import { getText } from '@zos/i18n'
 import { TEXT_STYLE } from './style'
 
 const WEEK = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-const BATTERY_LEVEL = ['power/1.png', 'power/2.png', 'power/3.png', 'power/4.png', 'power/5.png', 'power/6.png'];
+const BATTERY_LEVEL = ['power/0.png', 'power/1.png', 'power/2.png', 'power/3.png', 'power/4.png', 'power/5.png'];
 const HOUR = 3600000
-const MINUTE = 60000
 
 const TIME_SENSOR = new Time()
 const WEATHER_SENSOR = new Weather()
-let seconds_timer, hour_timer
+const HEART_RATE_SENSOR = new HeartRate()
+const CALORIE_SENSOR = new Calorie()
+const STEP_SENSOR = new Step()
+const DISTANCE_SENSOR = new Distance()
+const BATTERY_SENSOR = new Battery()
+
+let hour_timer
 
 const WIDGETS = {
   background: null,
@@ -23,6 +33,12 @@ const WIDGETS = {
   week_day: null,
   img_lines_hour: null,
   img_lines_minute: null,
+  status: {
+    disconnect: null,
+    connect: null,
+    lock: null,
+    alarm: null
+  },
   weather: {
     icon: null,
     city: null,
@@ -57,34 +73,7 @@ function addZero(str) {
 
 WatchFace({
 
-  UpdateWeatherWidgets(){
-    let { forecastData, tideData, cityName } = WEATHER_SENSOR.getForecast()
-    hour_timer = timer.createTimer(HOUR, 1, () => {
-      WIDGETS.weather.icon.setProperty(hmUI.prop.MORE, {
-          src: 'weather/'+ (forecastData.data[0].index).toString() + '.png'
-      }),
-      WIDGETS.weather.city.setProperty(hmUI.prop.TEXT, cityName)
-      WIDGETS.weather.low_t.setProperty(hmUI.prop.TEXT, forecastData.data[0].low)
-      WIDGETS.weather.high_t.setProperty(hmUI.prop.TEXT, forecastData.data[0].high)
-    });
-  },
-
-  onInit() {
-    this.UpdateWeatherWidgets()
-    seconds_timer = timer.createTimer(MINUTE, 1, () => {
-      let hours = addZero(TIME_SENSOR.getHours().toString())
-      let  minutes = addZero(TIME_SENSOR.getMinutes().toString())
-      let format_time = hours + ':' + minutes
-      let day = addZero(TIME_SENSOR.getDate().toString())
-      let month = TIME_SENSOR.getMonth()-1
-      let format_date = day + ' ' + getText(MONTHS[month])
-      WIDGETS.time.setProperty(hmUI.prop.TEXT, format_time)
-      WIDGETS.week_day.setProperty(hmUI.prop.TEXT, getText(WEEK[TIME_SENSOR.getDay()]))
-      WIDGETS.date.setProperty(hmUI.prop.TEXT, format_date)
-    });
-  },
-
-  build() {
+  Render(){
     WIDGETS.background = hmUI.createWidget(hmUI.widget.IMG, {
       x: 0,
       y: 0,
@@ -100,7 +89,7 @@ WatchFace({
       w: 400,
       h: 120,
       color: 0xffffff,
-      text_size: 140,
+      text_size: TEXT_STYLE.size.time,
       align_h: hmUI.align.CENTER_H,
       align_v: hmUI.align.CENTER_V,
       text_style: hmUI.text_style.NONE,
@@ -109,8 +98,8 @@ WatchFace({
     WIDGETS.second = hmUI.createWidget(hmUI.widget.TIME_POINTER, {
       second_centerX: 240,
       second_centerY: 240, 
-      second_posX: 241,
-      second_posY: 35,
+      second_posX: -12,
+      second_posY: 241,
       second_path: 'second.png',
     }),
     WIDGETS.img_lines_hour = hmUI.createWidget(hmUI.widget.IMG, {
@@ -125,11 +114,11 @@ WatchFace({
     }),
     WIDGETS.week_day = hmUI.createWidget(hmUI.widget.TEXT, {
       x: 160,
-      y: 50,
+      y: 60,
       w: 170,
       h: 50,
       color: 0xffffff,
-      text_size: 40,
+      text_size: TEXT_STYLE.size.week_day,
       align_h: hmUI.align.CENTER_H,
       align_v: hmUI.align.CENTER_V,
       text_style: hmUI.text_style.NONE,
@@ -138,10 +127,10 @@ WatchFace({
     WIDGETS.date = hmUI.createWidget(hmUI.widget.TEXT, {
       x: 130,
       y: 110,
-      w: 220,
+      w: 250,
       h: 50,
       color: 0xffffff,
-      text_size: 40,
+      text_size: TEXT_STYLE.size.date,
       align_h: hmUI.align.CENTER_H,
       align_v: hmUI.align.CENTER_V,
       text_style: hmUI.text_style.NONE,
@@ -153,14 +142,14 @@ WatchFace({
       w: 100,
       h: 20,
       color: 0xffffff,
-      text_size: 20,
+      text_size: TEXT_STYLE.size.city,
       align_h: hmUI.align.CENTER_H,
       align_v: hmUI.align.CENTER_V,
       text_style: hmUI.text_style.NONE,
       text: ''
     }),
     WIDGETS.weather.icon = hmUI.createWidget(hmUI.widget.IMG, {
-      x: 220,
+      x: 215,
       y: 370,
       src: ''
     }),
@@ -170,7 +159,7 @@ WatchFace({
       w: 40,
       h: 20,
       color: 0xffffff,
-      text_size: 20,
+      text_size: TEXT_STYLE.size.temperature,
       align_h: hmUI.align.CENTER_H,
       align_v: hmUI.align.CENTER_V,
       text_style: hmUI.text_style.NONE,
@@ -182,14 +171,14 @@ WatchFace({
       w: 40,
       h: 20,
       color: 0xffffff,
-      text_size: 20,
+      text_size: TEXT_STYLE.size.temperature,
       align_h: hmUI.align.CENTER_H,
       align_v: hmUI.align.CENTER_V,
       text_style: hmUI.text_style.NONE,
       text: '-20'
     }),
     WIDGETS.heart.rate = hmUI.createWidget(hmUI.widget.TEXT, {
-      x: 70,
+      x: 90,
       y: 320,
       w: 70,
       h: 30,
@@ -201,29 +190,46 @@ WatchFace({
       text: '158'
     }),
     WIDGETS.heart.icon = hmUI.createWidget(hmUI.widget.IMG, {
-      x: 145,
+      x: 165,
       y: 335,
       src: 'heart.png'
     }),
     WIDGETS.distance.dist= hmUI.createWidget(hmUI.widget.TEXT, {
-      x: 290,
+      x: 325,
       y: 320,
       w: 100,
       h: 30,
       color: 0xffffff,
       text_size: TEXT_STYLE.size.sport_data,
-      align_h: hmUI.align.RIGHT,
+      align_h: hmUI.align.LEFT,
       align_v: hmUI.align.CENTER_V,
       text_style: hmUI.text_style.NONE,
       text: '100.0'
     }),
     WIDGETS.distance.icon = hmUI.createWidget(hmUI.widget.IMG, {
-      x: 395,
+      x: 300,
       y: 330,
       src: 'distance.png'
     }),
     WIDGETS.steps.count= hmUI.createWidget(hmUI.widget.TEXT, {
+      x: 310,
+      y: 360,
+      w: 100,
+      h: 30,
+      color: 0xffffff,
+      text_size: TEXT_STYLE.size.sport_data,
+      align_h: hmUI.align.LEFT,
+      align_v: hmUI.align.CENTER_V,
+      text_style: hmUI.text_style.NONE,
+      text: '0'
+    }),
+    WIDGETS.steps.icon = hmUI.createWidget(hmUI.widget.IMG, {
       x: 285,
+      y: 365,
+      src: 'steps.png'
+    }),
+    WIDGETS.calories.count = hmUI.createWidget(hmUI.widget.TEXT, {
+      x: 70,
       y: 360,
       w: 100,
       h: 30,
@@ -232,38 +238,19 @@ WatchFace({
       align_h: hmUI.align.RIGHT,
       align_v: hmUI.align.CENTER_V,
       text_style: hmUI.text_style.NONE,
-      text: '50000'
-    }),
-    WIDGETS.steps.icon = hmUI.createWidget(hmUI.widget.IMG, {
-      x: 390,
-      y: 365,
-      src: 'steps.png'
-    }),
-    WIDGETS.calories.count = hmUI.createWidget(hmUI.widget.TEXT, {
-      x: 90,
-      y: 360,
-      w: 70,
-      h: 30,
-      color: 0xffffff,
-      text_size: TEXT_STYLE.size.sport_data,
-      align_h: hmUI.align.RIGHT,
-      align_v: hmUI.align.CENTER_V,
-      text_style: hmUI.text_style.NONE,
-      text: '1000'
+      text: ''
     }),
     WIDGETS.calories.icon = hmUI.createWidget(hmUI.widget.IMG, {
-      x: 165,
+      x: 175,
       y: 365,
       src: 'calories.png'
     }),
     WIDGETS.battery.icon = hmUI.createWidget(hmUI.widget.IMG_LEVEL, {
       x: 80,
-      y: 100,
-      w: 480,
-      h: 480,
+      y: 90,
       image_array: BATTERY_LEVEL,
       image_length: 6,
-      level: 1
+      level: 6
     }),
     WIDGETS.battery.count = hmUI.createWidget(hmUI.widget.TEXT, {
       x: 55,
@@ -276,16 +263,111 @@ WatchFace({
       align_v: hmUI.align.CENTER_V,
       text_style: hmUI.text_style.NONE,
       text: '100%'
+    }),
+    WIDGETS.status.lock = hmUI.createWidget(hmUI.widget.IMG_STATUS, {
+      x: 225,
+      y: 34,
+      type: hmUI.system_status.LOCK,
+      src: 'Lock.png'
+    }),
+    WIDGETS.status.connect = hmUI.createWidget(hmUI.widget.IMG, {
+      x: 203,
+      y: 34,
+      src: 'Connect.png'
+    }),
+    WIDGETS.status.disconnect = hmUI.createWidget(hmUI.widget.IMG_STATUS, {
+      x: 203,
+      y: 34,
+      type: hmUI.system_status.DISCONNECT,
+      src: 'Disconnect.png'
+    }),
+    WIDGETS.status.alarm = hmUI.createWidget(hmUI.widget.IMG_STATUS, {
+      x: 252,
+      y: 36,
+      type: hmUI.system_status.CLOCK,
+      src: 'Alarm.png'
     })
   },
+  UpdateWeatherWidgets(){
+    hour_timer = timer.createTimer(HOUR, 1, () => {
+      let { forecastData, tideData, cityName } = WEATHER_SENSOR.getForecast()
+      WIDGETS.weather.icon.setProperty(hmUI.prop.MORE, {
+          src: 'weather/'+ (forecastData.data[0].index).toString() + '.png'
+      }),
+      WIDGETS.weather.city.setProperty(hmUI.prop.TEXT, cityName)
+      WIDGETS.weather.low_t.setProperty(hmUI.prop.TEXT, forecastData.data[0].low.toString() + '°')
+      WIDGETS.weather.high_t.setProperty(hmUI.prop.TEXT, forecastData.data[0].high.toString() + '°')
+    });
+  },
+  UpdateBatteryWidgets(){
+    let levelIndex = 0
+    let batteryPercent = BATTERY_SENSOR.getCurrent()
+    WIDGETS.battery.count.setProperty(hmUI.prop.TEXT, batteryPercent.toString() + '%')
+    if (batteryPercent <= 10) levelIndex = 1      // 0-10%
+    else if (batteryPercent <= 30) levelIndex = 2 // 11-30%
+    else if (batteryPercent <= 50) levelIndex = 3 // 31-50%
+    else if (batteryPercent <= 70) levelIndex = 4 // 51-70%
+    else if (batteryPercent <= 90) levelIndex = 5 // 71-90%
+    else levelIndex = 6                           // 91-100%
+    WIDGETS.battery.icon.setProperty(hmUI.prop.LEVEL, levelIndex)
+  },
+  InitActivityWidgets(){
+    WIDGETS.steps.count.setProperty(hmUI.prop.TEXT, STEP_SENSOR.getCurrent().toString())
+    WIDGETS.distance.dist.setProperty(hmUI.prop.TEXT, ((DISTANCE_SENSOR.getCurrent()/1000).toFixed(1)))
+    WIDGETS.heart.rate.setProperty(hmUI.prop.TEXT, HEART_RATE_SENSOR.getLast().toString())
+    WIDGETS.calories.count.setProperty(hmUI.prop.TEXT, CALORIE_SENSOR.getCurrent().toString())
+  },
+  UpdateActivityWidgets(){
+    STEP_SENSOR.onChange(() => {
+      WIDGETS.steps.count.setProperty(hmUI.prop.TEXT, STEP_SENSOR.getCurrent().toString())
+    })
+    DISTANCE_SENSOR.onChange(() => {
+      WIDGETS.distance.dist.setProperty(hmUI.prop.TEXT, ((DISTANCE_SENSOR.getCurrent()/1000).toFixed(1)))
+    })
+    HEART_RATE_SENSOR.onCurrentChange(() => {
+      WIDGETS.heart.rate.setProperty(hmUI.prop.TEXT, HEART_RATE_SENSOR.getLast().toString())
+    })
+    CALORIE_SENSOR.onChange(() => {
+      WIDGETS.calories.count.setProperty(hmUI.prop.TEXT, CALORIE_SENSOR.getCurrent().toString())
+    })
+  },  
+  UpdateTimeWidget(){
+    let hours = addZero(TIME_SENSOR.getHours().toString())
+    let  minutes = addZero(TIME_SENSOR.getMinutes().toString())
+    let format_time = hours + ':' + minutes
+    WIDGETS.time.setProperty(hmUI.prop.TEXT, format_time)
+  },
+  UpdateDateAndDayOfWeek(){
+    let day = addZero(TIME_SENSOR.getDate().toString())
+    let month = TIME_SENSOR.getMonth()-1
+    let format_date = day + ' ' + getText(MONTHS[month])
+    WIDGETS.week_day.setProperty(hmUI.prop.TEXT, getText(WEEK[TIME_SENSOR.getDay()]))
+    WIDGETS.date.setProperty(hmUI.prop.TEXT, format_date)
+  },
 
+  onInit() {
+    this.Render()
+    this.UpdateWeatherWidgets()
+    this.UpdateBatteryWidgets()
+    this.UpdateTimeWidget()
+    this.InitActivityWidgets()
+    this.UpdateDateAndDayOfWeek()
+  },
+
+  build() {
+    this.UpdateActivityWidgets()
+    BATTERY_SENSOR.onChange(() => { this.UpdateBatteryWidgets() })
+    TIME_SENSOR.onPerMinute(() => { this.UpdateTimeWidget() })
+    TIME_SENSOR.onPerDay(() => { this.UpdateDateAndDayOfWeek() })
+  },
 
   onDestroy() {
-    if (seconds_timer.timer) {
-      timer.stopTimer(seconds_timerw)
-    }
     if (hour_timer.timer) {
       timer.stopTimer(hour_timer)
     }
+      STEP_SENSOR.offChange()
+      DISTANCE_SENSOR.offChange()
+      HEART_RATE_SENSOR.offCurrentChange()
+      CALORIE_SENSOR.offChange()
   }
 })

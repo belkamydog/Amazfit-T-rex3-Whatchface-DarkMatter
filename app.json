@@ -12,7 +12,12 @@
     "vender": "zepp",
     "description": "Sport adaptive watchface"
   },
-  "permissions": ["weather:read"],
+  "permissions": [
+    "weather:read",
+    "data:user.hd.heart_rate",
+    "data:user.hd.step",
+    "data:user.hd.calorie", 
+    "data:user.hd.distance"],
   "runtime": {
     "apiVersion": {
       "compatible": "2.0.0",
@@ -71,8 +76,8 @@
     }
   },
   "i18n": {
-    "en-US": "i18n/en-US.po",
-    "ru-RU": "i18n/ru-RU.po"
+
+
   },
   "defaultLanguage": "ru-RU"
 }
