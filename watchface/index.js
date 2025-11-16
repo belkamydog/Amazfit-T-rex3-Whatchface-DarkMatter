@@ -9,8 +9,10 @@ import { Battery } from '@zos/sensor'
 import timer from '@zos/timer'
 import { getText } from '@zos/i18n'
 import { TEXT_STYLE } from './style'
+import { launchApp, SYSTEM_APP_CALENDAR, SYSTEM_APP_HR, SYSTEM_APP_SETTING, SYSTEM_APP_STATUS, SYSTEM_APP_WEATHER } from '@zos/router'
 
-const WEEK = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+
+const WEEK = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat','Sun']
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 const BATTERY_LEVEL = ['power/0.png', 'power/1.png', 'power/2.png', 'power/3.png', 'power/4.png', 'power/5.png'];
 const HOUR = 3600000
@@ -179,7 +181,7 @@ WatchFace({
     }),
     WIDGETS.heart.rate = hmUI.createWidget(hmUI.widget.TEXT, {
       x: 90,
-      y: 320,
+      y: 305,
       w: 70,
       h: 30,
       color: 0xffffff,
@@ -191,12 +193,12 @@ WatchFace({
     }),
     WIDGETS.heart.icon = hmUI.createWidget(hmUI.widget.IMG, {
       x: 165,
-      y: 335,
+      y: 315,
       src: 'heart.png'
     }),
     WIDGETS.distance.dist= hmUI.createWidget(hmUI.widget.TEXT, {
       x: 325,
-      y: 320,
+      y: 305,
       w: 100,
       h: 30,
       color: 0xffffff,
@@ -208,7 +210,7 @@ WatchFace({
     }),
     WIDGETS.distance.icon = hmUI.createWidget(hmUI.widget.IMG, {
       x: 300,
-      y: 330,
+      y: 315,
       src: 'distance.png'
     }),
     WIDGETS.steps.count= hmUI.createWidget(hmUI.widget.TEXT, {
@@ -341,12 +343,136 @@ WatchFace({
     let day = addZero(TIME_SENSOR.getDate().toString())
     let month = TIME_SENSOR.getMonth()-1
     let format_date = day + ' ' + getText(MONTHS[month])
-    WIDGETS.week_day.setProperty(hmUI.prop.TEXT, getText(WEEK[TIME_SENSOR.getDay()]))
+    WIDGETS.week_day.setProperty(hmUI.prop.TEXT, getText(WEEK[TIME_SENSOR.getDay()-1]))
     WIDGETS.date.setProperty(hmUI.prop.TEXT, format_date)
+  },
+  AddClickActions(){
+    WIDGETS.week_day.addEventListener(hmUI.event.SELECT, (info) => {
+      console.log("week_day_select")
+      try {
+        launchApp({
+          appId: SYSTEM_APP_CALENDAR,
+          native: true,
+        })
+      } catch (error) {
+        console.log(error)
+      }
+    }),
+    WIDGETS.date.addEventListener(hmUI.event.SELECT, (info) => {
+      console.log("date_select")
+      try {
+        launchApp({
+          appId: SYSTEM_APP_CALENDAR,
+          native: true,
+        })
+      } catch (error) {
+        console.log(error)
+      }
+    }),
+    WIDGETS.heart.icon.addEventListener(hmUI.event.SELECT, (info) => {
+      console.log("heart_rate_icon_select")
+      try {
+        launchApp({
+          appId: SYSTEM_APP_HR,
+          native: true,
+        })
+      } catch (error) {
+        console.log(error)
+      }
+    }),
+    WIDGETS.heart.rate.addEventListener(hmUI.event.SELECT, (info) => {
+      console.log("heart_rate_select")
+      try {
+        launchApp({
+          appId: SYSTEM_APP_HR,
+          native: true,
+        })
+      } catch (error) {
+        console.log(error)
+      }
+    }),
+    WIDGETS.calories.icon.addEventListener(hmUI.event.SELECT, (info) => {
+      console.log("calories_icon_select")
+      try {
+        launchApp({
+          appId: SYSTEM_APP_STATUS,
+          native: true,
+        })
+      } catch (error) {
+        console.log(error)
+      }
+    }),
+    WIDGETS.calories.count.addEventListener(hmUI.event.SELECT, (info) => {
+      console.log("calories_count_select")
+      try {
+        launchApp({
+          appId: SYSTEM_APP_STATUS,
+          native: true,
+        })
+      } catch (error) {
+        console.log(error)
+      }
+    }),
+    WIDGETS.distance.dist.addEventListener(hmUI.event.SELECT, (info) => {
+      console.log("distance_select")
+      try {
+        launchApp({
+          appId: SYSTEM_APP_STATUS,
+          native: true,
+        })
+      } catch (error) {
+        console.log(error)
+      }
+    }),
+    WIDGETS.distance.icon.addEventListener(hmUI.event.SELECT, (info) => {
+      console.log("distance_icon_select")
+      try {
+        launchApp({
+          appId: SYSTEM_APP_STATUS,
+          native: true,
+        })
+      } catch (error) {
+        console.log(error)
+      }
+    }),
+    WIDGETS.steps.count.addEventListener(hmUI.event.SELECT, (info) => {
+      console.log("steps_select")
+      try {
+        launchApp({
+          appId: SYSTEM_APP_STATUS,
+          native: true,
+        })
+      } catch (error) {
+        console.log(error)
+      }
+    }),
+    WIDGETS.steps.icon.addEventListener(hmUI.event.SELECT, (info) => {
+      console.log("steps_icon_select")
+      try {
+        launchApp({
+          appId: SYSTEM_APP_STATUS,
+          native: true,
+        })
+      } catch (error) {
+        console.log(error)
+      }
+    }),
+    WIDGETS.weather.icon.addEventListener(hmUI.event.SELECT, (info) => {
+      console.log("weather_select")
+      try {
+        launchApp({
+          appId: SYSTEM_APP_WEATHER,
+          native: true,
+        })
+      } catch (error) {
+        console.log(error)
+      }
+    })                                          
   },
 
   onInit() {
     this.Render()
+    this.AddClickActions()
     this.UpdateWeatherWidgets()
     this.UpdateBatteryWidgets()
     this.UpdateTimeWidget()
@@ -360,7 +486,12 @@ WatchFace({
     TIME_SENSOR.onPerMinute(() => { this.UpdateTimeWidget() })
     TIME_SENSOR.onPerDay(() => { this.UpdateDateAndDayOfWeek() })
   },
-
+  onResume() {
+    this.UpdateTimeWidget();
+    this.UpdateDateAndDayOfWeek();
+    this.UpdateBatteryWidgets();
+    this.InitActivityWidgets();
+  },
   onDestroy() {
     if (hour_timer.timer) {
       timer.stopTimer(hour_timer)
