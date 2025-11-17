@@ -2,7 +2,7 @@
   "configVersion": "v2",
   "app": {
     "appId": 29630,
-    "appName": "SportAdaptive",
+    "appName": "DarkMatter",
     "appType": "watchface",
     "version": {
       "code": 1,
@@ -10,7 +10,7 @@
     },
     "icon": "icon.png",
     "vender": "zepp",
-    "description": "Sport adaptive watchface"
+    "description": "DarkMatter watchface"
   },
   "permissions": [
     "weather:read",
